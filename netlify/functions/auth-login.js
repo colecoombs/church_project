@@ -69,13 +69,14 @@ exports.handler = async (event, context) => {
     const client = await pool.connect();
     console.log('Database connected, querying user...');
     const results = await client.query(
-      'SELECT * FROM users WHERE username = $1',
+      'SELECT id, username, passwordhash, role, createdat, lastlogin FROM users WHERE username = $1',
       [username]
     );
     client.release();
     console.log('Query completed, found users:', results.rows.length);
 
     const user = results.rows[0];
+    console.log('User object:', { id: user?.id, username: user?.username, hasPasswordHash: !!user?.passwordhash, passwordHashLength: user?.passwordhash?.length });
     if (!user) {
       return {
         statusCode: 401,
@@ -85,7 +86,17 @@ exports.handler = async (event, context) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    console.log('About to compare password with hash:', { passwordProvided: !!password, hashExists: !!user.passwordhash });
+    if (!user.passwordhash) {
+      console.log('ERROR: No password hash found for user');
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Invalid credentials' })
+      };
+    }
+    const isValidPassword = await bcrypt.compare(password, user.passwordhash);
+    console.log('Password comparison result:', isValidPassword);
     if (!isValidPassword) {
       return {
         statusCode: 401,

@@ -102,7 +102,7 @@ exports.handler = async (event, context) => {
     };
 
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign({ userId: ADMIN_USER.id }, JWT_SECRET, { 
+    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { 
       expiresIn: rememberMe ? '30d' : '1d' 
     });
 

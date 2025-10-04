@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: grace-community-church
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000
+    disk:
+      name: church-uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
+
+databases:
+  - name: church-database
+    databaseName: church_db
+    user: church_user
+    plan: free
+
+# Optional: Static site for just the frontend
+# - type: static
+#   name: church-frontend
+#   buildCommand: echo "No build needed"
+#   publishPath: .
+#   routes:
+#     - type: rewrite
+#       source: /api/*
+#       destination: https://grace-community-church.onrender.com/api/*

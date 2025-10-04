@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/auth/verify"
+  to = "/.netlify/functions/auth-verify"
+  status = 200
+
+[[redirects]]
   from = "/api/videos/current"
   to = "/.netlify/functions/videos?path=current"
   status = 200

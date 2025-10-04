@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Grace Community Church</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="admin-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <nav class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-cross"></i>
+                    <span>Grace Community Church</span>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+                <a href="#current-video" class="nav-item" data-section="current-video">
+                    <i class="fas fa-video"></i>
+                    Current Video
+                </a>
+                <a href="#video-library" class="nav-item" data-section="video-library">
+                    <i class="fas fa-film"></i>
+                    Video Library
+                </a>
+                <a href="#social-media" class="nav-item" data-section="social-media">
+                    <i class="fas fa-share-alt"></i>
+                    Social Media
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Header -->
+            <header class="admin-header">
+                <h1 class="admin-title">Admin Dashboard</h1>
+                <div class="admin-actions">
+                    <span class="user-info">Welcome, <span id="currentUser"></span></span>
+                    <button class="logout-btn" onclick="adminAuth.logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <div class="content-card">
+                    <h2>Overview</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="totalVideos">0</div>
+                                <div class="stat-label">Total Videos</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-number">1,234</div>
+                                <div class="stat-label">Views This Month</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="lastUpdated">-</div>
+                                <div class="stat-label">Last Updated</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <h2>Recent Activity</h2>
+                    <div id="recentActivity">
+                        <p>No recent activity</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Current Video Section -->
+            <section id="current-video" class="content-section">
+                <div class="content-card">
+                    <h2>Current Featured Video</h2>
+                    <form id="currentVideoForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="videoType">Video Type</label>
+                                <select id="videoType" name="videoType" onchange="toggleVideoInputs()">
+                                    <option value="youtube">YouTube Link</option>
+                                    <option value="upload">Upload Video</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="youtubeInput" class="form-group">
+                            <label for="youtubeUrl">YouTube URL</label>
+                            <input type="url" id="youtubeUrl" name="youtubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+
+                        <div id="uploadInput" class="form-group" style="display: none;">
+                            <label>Upload Video File</label>
+                            <div class="file-upload" onclick="document.getElementById('videoFile').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <p class="file-info">MP4, WebM or OGV (Max 100MB)</p>
+                                <input type="file" id="videoFile" accept="video/*">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="videoTitle">Video Title</label>
+                                <input type="text" id="videoTitle" name="videoTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="videoDescription">Description</label>
+                                <textarea id="videoDescription" name="videoDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="previewCurrentVideo()">Preview</button>
+                            <button type="submit" class="btn btn-primary">Update Current Video</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="content-card">
+                    <h2>Preview</h2>
+                    <div id="currentVideoPreview" class="video-preview">
+                        <div class="video-placeholder">
+                            <i class="fas fa-play-circle"></i>
+                            <p>No video selected</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Library Section -->
+            <section id="video-library" class="content-section">
+                <div class="content-card">
+                    <h2>Add New Video to Library</h2>
+                    <form id="addVideoForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="libraryVideoType">Video Type</label>
+                                <select id="libraryVideoType" name="libraryVideoType" onchange="toggleLibraryVideoInputs()">
+                                    <option value="youtube">YouTube Link</option>
+                                    <option value="upload">Upload Video</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="libraryVideoDate">Date</label>
+                                <input type="date" id="libraryVideoDate" name="libraryVideoDate" required>
+                            </div>
+                        </div>
+
+                        <div id="libraryYoutubeInput" class="form-group">
+                            <label for="libraryYoutubeUrl">YouTube URL</label>
+                            <input type="url" id="libraryYoutubeUrl" name="libraryYoutubeUrl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+
+                        <div id="libraryUploadInput" class="form-group" style="display: none;">
+                            <label>Upload Video File</label>
+                            <div class="file-upload" onclick="document.getElementById('libraryVideoFile').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <p class="file-info">MP4, WebM or OGV (Max 100MB)</p>
+                                <input type="file" id="libraryVideoFile" accept="video/*">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="libraryVideoTitle">Video Title</label>
+                                <input type="text" id="libraryVideoTitle" name="libraryVideoTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="libraryVideoDescription">Description</label>
+                                <textarea id="libraryVideoDescription" name="libraryVideoDescription" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add to Library</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="content-card">
+                    <h2>Video Library</h2>
+                    <div id="videoLibraryList" class="video-list">
+                        <!-- Video items will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Social Media Section -->
+            <section id="social-media" class="content-section">
+                <div class="content-card">
+                    <h2>Social Media Links</h2>
+                    <form id="socialMediaForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="facebookUrl">Facebook URL</label>
+                                <input type="url" id="facebookUrl" name="facebookUrl" placeholder="https://facebook.com/yourchurch">
+                            </div>
+                            <div class="form-group">
+                                <label for="instagramUrl">Instagram URL</label>
+                                <input type="url" id="instagramUrl" name="instagramUrl" placeholder="https://instagram.com/yourchurch">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="youtubeChannelUrl">YouTube Channel URL</label>
+                                <input type="url" id="youtubeChannelUrl" name="youtubeChannelUrl" placeholder="https://youtube.com/yourchurch">
+                            </div>
+                            <div class="form-group">
+                                <label for="twitterUrl">Twitter URL</label>
+                                <input type="url" id="twitterUrl" name="twitterUrl" placeholder="https://twitter.com/yourchurch">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Social Media Links</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="content-card">
+                    <h2>Church Information</h2>
+                    <form id="settingsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="churchName">Church Name</label>
+                                <input type="text" id="churchName" name="churchName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="churchPhone">Phone Number</label>
+                                <input type="tel" id="churchPhone" name="churchPhone">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="churchAddress">Address</label>
+                            <textarea id="churchAddress" name="churchAddress" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="churchEmail">Email</label>
+                                <input type="email" id="churchEmail" name="churchEmail">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Update Settings</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="content-card">
+                    <h2>Admin Users</h2>
+                    <div class="admin-users">
+                        <p>Current admin users:</p>
+                        <ul>
+                            <li>admin (Administrator)</li>
+                            <li>pastor (Pastor)</li>
+                        </ul>
+                        <p class="text-muted">To add or modify admin users, please contact your system administrator.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script src="admin-dashboard.js"></script>
+</body>
+</html>

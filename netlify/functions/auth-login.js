@@ -13,6 +13,13 @@ const pool = new Pool({
 });
 
 exports.handler = async (event, context) => {
+  console.log('Auth login function called');
+  console.log('Environment check:', {
+    hasJWTSecret: !!process.env.JWT_SECRET,
+    hasDatabaseURL: !!process.env.DATABASE_URL,
+    nodeEnv: process.env.NODE_ENV
+  });
+
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -40,10 +47,13 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    console.log('Parsing request body...');
     const { username, password, rememberMe = false } = JSON.parse(event.body);
+    console.log('Login attempt for username:', username);
 
     // Basic validation
     if (!username || !password || username.length < 3 || password.length < 6) {
+      console.log('Validation failed:', { username: username?.length, password: password?.length });
       return {
         statusCode: 400,
         headers,
@@ -55,12 +65,15 @@ exports.handler = async (event, context) => {
     }
 
     // Find user in database
+    console.log('Connecting to database...');
     const client = await pool.connect();
+    console.log('Database connected, querying user...');
     const results = await client.query(
       'SELECT * FROM users WHERE username = $1',
       [username]
     );
     client.release();
+    console.log('Query completed, found users:', results.rows.length);
 
     const user = results.rows[0];
     if (!user) {

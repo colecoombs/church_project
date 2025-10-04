@@ -1,13 +1,12 @@
-const { connect } = require('@planetscale/database');
+const { Pool } = require('pg');
 
-// PlanetScale database connection
-const config = {
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD
-};
-
-const conn = connect(config);
+// Neon PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -30,7 +29,9 @@ exports.handler = async (event, context) => {
   try {
     if (event.httpMethod === 'GET') {
       // Get public settings from database
-      const results = await conn.execute('SELECT `key`, `value` FROM settings');
+      const client = await pool.connect();
+      const results = await client.query('SELECT key, value FROM settings');
+      client.release();
       
       const settings = {};
       results.rows.forEach(row => {
@@ -52,12 +53,14 @@ exports.handler = async (event, context) => {
       const updatedSettings = JSON.parse(event.body);
       
       // Update each setting in the database
+      const client = await pool.connect();
       for (const [key, value] of Object.entries(updatedSettings)) {
-        await conn.execute(
-          'INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)',
+        await client.query(
+          'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
           [key, value]
         );
       }
+      client.release();
 
       return {
         statusCode: 200,

@@ -1,13 +1,12 @@
-const { connect } = require('@planetscale/database');
+const { Pool } = require('pg');
 
-// PlanetScale database connection
-const config = {
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD
-};
-
-const conn = connect(config);
+// Neon PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -63,10 +62,12 @@ exports.handler = async (event, context) => {
     }
 
     // Store contact form submission in database
-    await conn.execute(
-      'INSERT INTO contacts (name, email, subject, message) VALUES (?, ?, ?, ?)',
+    const client = await pool.connect();
+    await client.query(
+      'INSERT INTO contacts (name, email, subject, message) VALUES ($1, $2, $3, $4)',
       [name, email, subject, message]
     );
+    client.release();
 
     // TODO: In production, add email sending with SendGrid/Mailgun
     console.log('Contact form submission stored:', {

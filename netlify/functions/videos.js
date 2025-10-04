@@ -1,13 +1,12 @@
-const { connect } = require('@planetscale/database');
+const { Pool } = require('pg');
 
-// PlanetScale database connection
-const config = {
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD
-};
-
-const conn = connect(config);
+// Neon PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -31,9 +30,11 @@ exports.handler = async (event, context) => {
     if (event.httpMethod === 'GET') {
       // Get all videos or current featured video
       if (event.queryStringParameters?.path === 'current') {
-        const results = await conn.execute(
-          'SELECT * FROM videos WHERE featured = 1 ORDER BY date DESC LIMIT 1'
+        const client = await pool.connect();
+        const results = await client.query(
+          'SELECT * FROM videos WHERE featured = true ORDER BY date DESC LIMIT 1'
         );
+        client.release();
         const featuredVideo = results.rows[0];
         
         return {
@@ -47,9 +48,11 @@ exports.handler = async (event, context) => {
       }
 
       // Get all videos
-      const results = await conn.execute(
+      const client = await pool.connect();
+      const results = await client.query(
         'SELECT * FROM videos ORDER BY date DESC'
       );
+      client.release();
 
       return {
         statusCode: 200,
@@ -65,10 +68,12 @@ exports.handler = async (event, context) => {
       // Add new video (admin only - would need auth check)
       const { title, url, type, thumbnail, duration, description, featured = 0 } = JSON.parse(event.body);
       
-      const results = await conn.execute(
-        'INSERT INTO videos (title, url, type, thumbnail, duration, description, featured, date) VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())',
+      const client = await pool.connect();
+      const results = await client.query(
+        'INSERT INTO videos (title, url, type, thumbnail, duration, description, featured, date) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE) RETURNING id',
         [title, url, type || 'youtube', thumbnail, duration, description, featured]
       );
+      client.release();
 
       return {
         statusCode: 201,
@@ -85,7 +90,9 @@ exports.handler = async (event, context) => {
       // Delete video (admin only - would need auth check)
       const videoId = parseInt(event.queryStringParameters?.id);
       
-      await conn.execute('DELETE FROM videos WHERE id = ?', [videoId]);
+      const client = await pool.connect();
+      await client.query('DELETE FROM videos WHERE id = $1', [videoId]);
+      client.release();
 
       return {
         statusCode: 200,

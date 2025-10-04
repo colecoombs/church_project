@@ -1,17 +1,16 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { connect } = require('@planetscale/database');
+const { Pool } = require('pg');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
-// PlanetScale database connection
-const config = {
-  host: process.env.DATABASE_HOST,
-  username: process.env.DATABASE_USERNAME,
-  password: process.env.DATABASE_PASSWORD
-};
-
-const conn = connect(config);
+// Neon PostgreSQL connection
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -56,10 +55,12 @@ exports.handler = async (event, context) => {
     }
 
     // Find user in database
-    const results = await conn.execute(
-      'SELECT * FROM users WHERE username = ?',
+    const client = await pool.connect();
+    const results = await client.query(
+      'SELECT * FROM users WHERE username = $1',
       [username]
     );
+    client.release();
 
     const user = results.rows[0];
     if (!user) {
@@ -81,10 +82,12 @@ exports.handler = async (event, context) => {
     }
 
     // Update last login
-    await conn.execute(
-      'UPDATE users SET lastLogin = NOW() WHERE id = ?',
+    const updateClient = await pool.connect();
+    await updateClient.query(
+      'UPDATE users SET lastLogin = NOW() WHERE id = $1',
       [user.id]
     );
+    updateClient.release();
 
     // Generate JWT tokens
     const permissions = user.role === 'admin' 

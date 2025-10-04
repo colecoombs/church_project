@@ -1,3 +1,14 @@
+const { connect } = require('@planetscale/database');
+
+// PlanetScale database connection
+const config = {
+  host: process.env.DATABASE_HOST,
+  username: process.env.DATABASE_USERNAME,
+  password: process.env.DATABASE_PASSWORD
+};
+
+const conn = connect(config);
+
 exports.handler = async (event, context) => {
   // Enable CORS
   const headers = {
@@ -51,20 +62,19 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // TODO: In a real implementation, you would:
-    // 1. Send email using a service like SendGrid, Mailgun, or AWS SES
-    // 2. Store the message in a database
-    // 3. Send confirmation email to the user
+    // Store contact form submission in database
+    await conn.execute(
+      'INSERT INTO contacts (name, email, subject, message) VALUES (?, ?, ?, ?)',
+      [name, email, subject, message]
+    );
 
-    console.log('Contact form submission:', {
+    // TODO: In production, add email sending with SendGrid/Mailgun
+    console.log('Contact form submission stored:', {
       name,
       email,
       subject,
-      message,
       timestamp: new Date().toISOString()
     });
-
-    // Simulate email sending success
     return {
       statusCode: 200,
       headers,

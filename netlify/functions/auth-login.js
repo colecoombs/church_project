@@ -1,17 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { connect } = require('@planetscale/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
-// Hardcoded admin user for demo - replace with real database
-const ADMIN_USER = {
-  id: 1,
-  username: 'admin',
-  // Password: 'churchadmin123' (hashed with bcrypt)
-  passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdEZwNEy0P7nUgW',
-  role: 'admin',
-  permissions: ['manage_users', 'manage_videos', 'manage_settings']
+// PlanetScale database connection
+const config = {
+  host: process.env.DATABASE_HOST,
+  username: process.env.DATABASE_USERNAME,
+  password: process.env.DATABASE_PASSWORD
 };
+
+const conn = connect(config);
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -55,8 +55,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Check username
-    if (username !== ADMIN_USER.username) {
+    // Find user in database
+    const results = await conn.execute(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
+
+    const user = results.rows[0];
+    if (!user) {
       return {
         statusCode: 401,
         headers,
@@ -65,7 +71,7 @@ exports.handler = async (event, context) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, ADMIN_USER.passwordHash);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       return {
         statusCode: 401,
@@ -74,12 +80,22 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Update last login
+    await conn.execute(
+      'UPDATE users SET lastLogin = NOW() WHERE id = ?',
+      [user.id]
+    );
+
     // Generate JWT tokens
+    const permissions = user.role === 'admin' 
+      ? ['manage_users', 'manage_videos', 'manage_settings'] 
+      : [];
+
     const tokenPayload = {
-      userId: ADMIN_USER.id,
-      username: ADMIN_USER.username,
-      role: ADMIN_USER.role,
-      permissions: ADMIN_USER.permissions
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+      permissions: permissions
     };
 
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
@@ -101,10 +117,10 @@ exports.handler = async (event, context) => {
         success: true,
         message: 'Login successful',
         user: {
-          id: ADMIN_USER.id,
-          username: ADMIN_USER.username,
-          role: ADMIN_USER.role,
-          permissions: ADMIN_USER.permissions
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          permissions: permissions
         },
         accessToken,
         refreshToken

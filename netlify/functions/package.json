@@ -4,6 +4,7 @@
   "description": "Serverless functions for Grace Community Church website",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "@planetscale/database": "^1.11.0"
   }
 }

@@ -5,27 +5,43 @@
 [build.environment]
   NODE_ENV = "production"
 
+# API Routes - Redirect to Netlify Functions
 [[redirects]]
   from = "/api/auth/login"
   to = "/.netlify/functions/auth-login"
   status = 200
 
 [[redirects]]
-  from = "/api/auth/*"
-  to = "/.netlify/functions/auth-:splat"
+  from = "/api/videos/current"
+  to = "/.netlify/functions/videos?path=current"
   status = 200
 
 [[redirects]]
-  from = "/api/videos/*"
-  to = "/.netlify/functions/videos-:splat"
+  from = "/api/videos"
+  to = "/.netlify/functions/videos"
   status = 200
 
 [[redirects]]
-  from = "/api/settings/*"
-  to = "/.netlify/functions/settings-:splat"
+  from = "/api/settings/public"
+  to = "/.netlify/functions/settings"
   status = 200
 
+[[redirects]]
+  from = "/api/contact"
+  to = "/.netlify/functions/contact"
+  status = 200
+
+# SPA fallback - serve index.html for all other routes
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

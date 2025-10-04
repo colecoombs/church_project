@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <h1 class="logo">Admin Dashboard</h1>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><span>Welcome, <%= user %></span></li>
+        <li><a href="/admin/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="admin-container">
+    <div class="container">
+      <div class="admin-section">
+        <h2>Featured Video</h2>
+        <form id="featured-video-form">
+          <div class="form-group">
+            <label for="featured-title">Video Title</label>
+            <input type="text" id="featured-title" name="title" value="<%= videos.featured.title %>" required>
+          </div>
+          <div class="form-group">
+            <label for="featured-url">Video URL</label>
+            <input type="url" id="featured-url" name="url" value="<%= videos.featured.url %>" required>
+            <small>For YouTube: Use embed URL (e.g., https://www.youtube.com/embed/VIDEO_ID)</small>
+          </div>
+          <div class="form-group">
+            <label for="featured-type">Video Type</label>
+            <select id="featured-type" name="type">
+              <option value="youtube" <%= videos.featured.type === 'youtube' ? 'selected' : '' %>>YouTube</option>
+              <option value="direct" <%= videos.featured.type === 'direct' ? 'selected' : '' %>>Direct Link</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Featured Video</button>
+        </form>
+      </div>
+
+      <div class="admin-section">
+        <h2>Add Archived Video</h2>
+        <form id="add-video-form">
+          <div class="form-group">
+            <label for="archived-title">Video Title</label>
+            <input type="text" id="archived-title" name="title" required>
+          </div>
+          <div class="form-group">
+            <label for="archived-url">Video URL</label>
+            <input type="url" id="archived-url" name="url" required>
+            <small>For YouTube: Use watch URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)</small>
+          </div>
+          <div class="form-group">
+            <label for="archived-type">Video Type</label>
+            <select id="archived-type" name="type">
+              <option value="youtube">YouTube</option>
+              <option value="direct">Direct Link</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Video</button>
+        </form>
+      </div>
+
+      <div class="admin-section">
+        <h2>Archived Videos</h2>
+        <% if (videos.archived.length === 0) { %>
+          <p class="no-videos">No archived videos yet.</p>
+        <% } else { %>
+          <div class="video-list">
+            <% videos.archived.forEach(video => { %>
+              <div class="video-item" data-id="<%= video.id %>">
+                <div class="video-item-info">
+                  <h4><%= video.title %></h4>
+                  <p><%= new Date(video.date).toLocaleDateString() %></p>
+                  <a href="<%= video.url %>" target="_blank"><%= video.url %></a>
+                </div>
+                <button class="btn btn-danger delete-video" data-id="<%= video.id %>">
+                  <i class="fas fa-trash"></i> Delete
+                </button>
+              </div>
+            <% }); %>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="admin-section">
+        <h2>Social Media Settings</h2>
+        <form id="settings-form">
+          <div class="form-group">
+            <label for="church-name">Church Name</label>
+            <input type="text" id="church-name" name="churchName" value="<%= settings.churchName %>" required>
+          </div>
+          <div class="form-group">
+            <label for="facebook">Facebook URL</label>
+            <input type="url" id="facebook" name="facebook" value="<%= settings.socialMedia.facebook %>">
+          </div>
+          <div class="form-group">
+            <label for="twitter">Twitter URL</label>
+            <input type="url" id="twitter" name="twitter" value="<%= settings.socialMedia.twitter %>">
+          </div>
+          <div class="form-group">
+            <label for="instagram">Instagram URL</label>
+            <input type="url" id="instagram" name="instagram" value="<%= settings.socialMedia.instagram %>">
+          </div>
+          <div class="form-group">
+            <label for="youtube">YouTube URL</label>
+            <input type="url" id="youtube" name="youtube" value="<%= settings.socialMedia.youtube %>">
+          </div>
+          <button type="submit" class="btn btn-primary">Update Settings</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

@@ -87,6 +87,8 @@ exports.handler = async (event, context) => {
 
     // Verify password
     console.log('About to compare password with hash:', { passwordProvided: !!password, hashExists: !!user.passwordhash });
+    console.log('Password details:', { passwordLength: password?.length, passwordValue: password });
+    console.log('Hash details:', { hashLength: user.passwordhash?.length, hashStart: user.passwordhash?.substring(0, 10) });
     if (!user.passwordhash) {
       console.log('ERROR: No password hash found for user');
       return {

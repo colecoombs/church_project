@@ -1,16 +1,41 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// For serverless, you'll need to use a cloud database like FaunaDB, PlanetScale, or Supabase
-// This is a simplified example - you'll need to adapt your User model
-
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
 
+// Hardcoded admin user for demo - replace with real database
+const ADMIN_USER = {
+  id: 1,
+  username: 'admin',
+  // Password: 'churchadmin123' (hashed with bcrypt)
+  passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdEZwNEy0P7nUgW',
+  role: 'admin',
+  permissions: ['manage_users', 'manage_videos', 'manage_settings']
+};
+
 exports.handler = async (event, context) => {
+  // Enable CORS
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true'
+  };
+
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
@@ -22,6 +47,7 @@ exports.handler = async (event, context) => {
     if (!username || !password || username.length < 3 || password.length < 6) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify({
           error: 'Invalid input',
           details: 'Username must be at least 3 characters, password at least 6 characters'
@@ -29,55 +55,42 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // TODO: Replace with your cloud database query
-    // const user = await findUserByUsername(username);
-    
-    // For demo purposes - you'll need to implement actual database queries
-    const mockUser = {
-      id: 1,
-      username: 'admin',
-      passwordHash: '$2a$12$...' // This would come from your database
-    };
-
-    if (username !== mockUser.username) {
+    // Check username
+    if (username !== ADMIN_USER.username) {
       return {
         statusCode: 401,
+        headers,
         body: JSON.stringify({ error: 'Invalid credentials' })
       };
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, mockUser.passwordHash);
+    const isValidPassword = await bcrypt.compare(password, ADMIN_USER.passwordHash);
     if (!isValidPassword) {
       return {
         statusCode: 401,
+        headers,
         body: JSON.stringify({ error: 'Invalid credentials' })
       };
     }
 
-    // Generate JWT token
+    // Generate JWT tokens
     const tokenPayload = {
-      userId: mockUser.id,
-      username: mockUser.username,
-      role: 'admin',
-      permissions: ['manage_users', 'manage_videos', 'manage_settings']
+      userId: ADMIN_USER.id,
+      username: ADMIN_USER.username,
+      role: ADMIN_USER.role,
+      permissions: ADMIN_USER.permissions
     };
 
-    const accessToken = jwt.sign(
-      tokenPayload,
-      JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: mockUser.id },
-      JWT_SECRET,
-      { expiresIn: rememberMe ? '30d' : '1d' }
-    );
+    const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '15m' });
+    const refreshToken = jwt.sign({ userId: ADMIN_USER.id }, JWT_SECRET, { 
+      expiresIn: rememberMe ? '30d' : '1d' 
+    });
 
     return {
       statusCode: 200,
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
         'Set-Cookie': [
           `accessToken=${accessToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=900`,
@@ -88,10 +101,10 @@ exports.handler = async (event, context) => {
         success: true,
         message: 'Login successful',
         user: {
-          id: mockUser.id,
-          username: mockUser.username,
-          role: 'admin',
-          permissions: tokenPayload.permissions
+          id: ADMIN_USER.id,
+          username: ADMIN_USER.username,
+          role: ADMIN_USER.role,
+          permissions: ADMIN_USER.permissions
         },
         accessToken,
         refreshToken
@@ -102,6 +115,7 @@ exports.handler = async (event, context) => {
     console.error('Login error:', error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

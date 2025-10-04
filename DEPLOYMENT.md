@@ -20,38 +20,59 @@ RATE_LIMIT_MAX_REQUESTS=100
 SESSION_TIMEOUT_MINUTES=15
 ```
 
-## Render.com Deployment Steps
+## Railway Deployment Steps (Recommended)
 
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Prepare for production deployment"
-   git push origin main-implementation
+1. **Create Railway Account**
+   - Go to https://railway.app
+   - Sign up with GitHub (free $5 monthly credit)
+
+2. **Deploy from GitHub**
+   - Click "Start a New Project"
+   - Select "Deploy from GitHub repo"
+   - Choose `church_project` repository
+   - Branch: `main-implementation`
+
+3. **Configure Environment Variables**
+   - Railway auto-detects your Node.js app
+   - Add these variables in the dashboard:
+   ```
+   NODE_ENV=production
+   JWT_SECRET=[generate 64-char random string]
+   JWT_REFRESH_SECRET=[generate 64-char random string]
    ```
 
-2. **Create Render Account**
-   - Go to https://render.com
+4. **Deploy**
+   - Railway automatically builds and deploys
+   - Get your URL: `https://[random].up.railway.app`
+   - Takes 2-3 minutes!
+
+## Alternative: Render.com Deployment Steps
+
+**Note**: Render free tier allows only 1 web service per account
+
+1. **Create Render Account** (if upgrading to paid)
+   - Go to https://render.com ($7/month for multiple services)
    - Sign up with GitHub
 
-3. **Create New Web Service**
+2. **Create New Web Service**
    - Click "New +" → "Web Service"
    - Connect your GitHub repository
    - Select `church_project` repository
    - Branch: `main-implementation`
 
-4. **Configure Service**
+3. **Configure Service**
    - **Name**: `grace-community-church`
    - **Environment**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
-   - **Plan**: Free
+   - **Plan**: Free or Starter ($7/month)
 
-5. **Add Environment Variables**
+4. **Add Environment Variables**
    - Go to "Environment" tab
    - Add the variables listed above
    - Use "Generate" for JWT secrets
 
-6. **Deploy**
+5. **Deploy**
    - Click "Create Web Service"
    - Wait for deployment (5-10 minutes)
 
@@ -113,15 +134,25 @@ SESSION_TIMEOUT_MINUTES=15
 
 ## Cost Breakdown
 
-**Render.com Free Tier:**
-- Web Service: Free (with sleep after 15min inactivity)
-- PostgreSQL: Free (1GB storage)
+**Railway (Recommended):**
+- Free: $5 monthly credit (usually enough for small sites)
+- Pro: $20/month (unlimited usage)
 - SSL Certificate: Free
 - Custom Domain: Free
 
-**Upgrade Options:**
-- $7/month: No sleep, faster builds
-- Database: $7/month for more storage
+**Render.com:**
+- Free Tier: 1 web service only (with sleep after 15min)
+- Starter: $7/month (no sleep, multiple services)
+- PostgreSQL: Free (1GB) or $7/month
+- SSL Certificate: Free
+- Custom Domain: Free
+
+**Vercel:**
+- Hobby: Free (generous limits)
+- Pro: $20/month
+- Functions: Included
+- SSL Certificate: Free
+- Custom Domain: Free
 
 ## Backup Strategy
 

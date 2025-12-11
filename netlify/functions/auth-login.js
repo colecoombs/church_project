@@ -52,14 +52,14 @@ exports.handler = async (event, context) => {
     console.log('Login attempt for username:', username);
 
     // Basic validation
-    if (!username || !password || username.length < 3 || password.length < 6) {
+    if (!username || !password || username.length < 3 || password.length < 4) {
       console.log('Validation failed:', { username: username?.length, password: password?.length });
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
           error: 'Invalid input',
-          details: 'Username must be at least 3 characters, password at least 6 characters'
+          details: 'Username must be at least 3 characters, password at least 4 characters'
         })
       };
     }

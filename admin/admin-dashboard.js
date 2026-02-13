@@ -203,7 +203,6 @@ class AdminDashboard {
             const settings = this.contentData.settings;
             document.getElementById('churchName').value = settings.churchName || '';
             document.getElementById('churchPhone').value = settings.phone || '';
-            document.getElementById('churchAddress').value = settings.address || '';
             document.getElementById('churchEmail').value = settings.email || '';
         }
     }
@@ -391,7 +390,6 @@ class AdminDashboard {
         this.contentData.settings = {
             churchName: formData.get('churchName'),
             phone: formData.get('churchPhone'),
-            address: formData.get('churchAddress'),
             email: formData.get('churchEmail')
         };
 

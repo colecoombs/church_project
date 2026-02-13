@@ -289,22 +289,26 @@ class ChurchWebsite {
     updateContactInfo() {
         if (!this.content) return;
 
-        const addressEl = document.getElementById('church-address');
         const phoneEl = document.getElementById('church-phone');
         const emailEl = document.getElementById('church-email');
-        const serviceTimesEl = document.getElementById('service-times');
+        const footerChurchName = document.getElementById('footer-church-name');
+        const footerPhone = document.getElementById('footer-phone');
+        const footerEmail = document.getElementById('footer-email');
 
-        if (addressEl && this.content.settings?.address) {
-            addressEl.textContent = this.content.settings.address;
-        }
         if (phoneEl && this.content.settings?.phone) {
             phoneEl.textContent = this.content.settings.phone;
         }
         if (emailEl && this.content.settings?.email) {
             emailEl.textContent = this.content.settings.email;
         }
-        if (serviceTimesEl && this.content.settings?.serviceTime) {
-            serviceTimesEl.textContent = this.content.settings.serviceTime;
+        if (footerChurchName && this.content.settings?.churchName) {
+            footerChurchName.textContent = this.content.settings.churchName;
+        }
+        if (footerPhone && this.content.settings?.phone) {
+            footerPhone.textContent = this.content.settings.phone;
+        }
+        if (footerEmail && this.content.settings?.email) {
+            footerEmail.textContent = this.content.settings.email;
         }
     }
 

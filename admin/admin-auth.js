@@ -27,7 +27,7 @@ class AdminAuth {
         this.hideMessages();
 
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/.netlify/functions/auth-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ class AdminAuth {
 
     async checkExistingSession() {
         try {
-            const response = await fetch('/api/auth/verify', {
+            const response = await fetch('/.netlify/functions/auth-verify', {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -81,7 +81,7 @@ class AdminAuth {
 
     async isLoggedIn() {
         try {
-            const response = await fetch('/api/auth/verify', {
+            const response = await fetch('/.netlify/functions/auth-verify', {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -105,7 +105,7 @@ class AdminAuth {
 
     showLoading(show) {
         const loginBtn = document.querySelector('.login-btn');
-        const btnText = loginBtn.querySelector('i').nextSibling;
+        if (!loginBtn) return;
         
         if (show) {
             loginBtn.disabled = true;
@@ -160,7 +160,7 @@ class AdminAuth {
     // Get session data from verify endpoint
     async getSessionData() {
         try {
-            const response = await fetch('/api/auth/verify', {
+            const response = await fetch('/.netlify/functions/auth-verify', {
                 method: 'GET',
                 credentials: 'include'
             });

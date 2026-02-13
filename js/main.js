@@ -40,9 +40,9 @@ class ChurchWebsite {
     async loadContent() {
         try {
             const [settingsResponse, videosResponse, currentVideoResponse] = await Promise.all([
-                fetch('/api/settings/public'),
-                fetch('/api/videos'),
-                fetch('/api/videos/current')
+                fetch('/.netlify/functions/settings'),
+                fetch('/.netlify/functions/videos'),
+                fetch('/.netlify/functions/videos?path=current')
             ]);
             
             const settings = settingsResponse.ok ? await settingsResponse.json() : { data: {} };

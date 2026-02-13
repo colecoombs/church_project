@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const { verifyAuth, isAdmin } = require('./utils/auth-middleware');
 
 // Neon PostgreSQL connection
 const pool = new Pool({
@@ -43,24 +44,47 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: true,
-          settings: settings
+          data: settings
         })
       };
     }
 
     if (event.httpMethod === 'PUT') {
-      // Update settings (admin only - would need auth check)
+      // Update settings (admin only)
+      const authResult = verifyAuth(event);
+      if (!authResult.authorized || !isAdmin(authResult.user)) {
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Unauthorized. Admin access required.' })
+        };
+      }
+
       const updatedSettings = JSON.parse(event.body);
       
       // Update each setting in the database
       const client = await pool.connect();
-      for (const [key, value] of Object.entries(updatedSettings)) {
-        await client.query(
-          'INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value',
-          [key, value]
-        );
+      
+      try {
+        // Begin transaction
+        await client.query('BEGIN');
+        
+        for (const [key, value] of Object.entries(updatedSettings)) {
+          await client.query(
+            'INSERT INTO settings (key, value, updatedAt) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updatedAt = NOW()',
+            [key, value]
+          );
+        }
+        
+        // Commit transaction
+        await client.query('COMMIT');
+      } catch (err) {
+        // Rollback on error
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
       }
-      client.release();
 
       return {
         statusCode: 200,

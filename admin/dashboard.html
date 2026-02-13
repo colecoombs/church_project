@@ -36,6 +36,10 @@
                     <i class="fas fa-share-alt"></i>
                     Social Media
                 </a>
+                <a href="#contacts" class="nav-item" data-section="contacts">
+                    <i class="fas fa-envelope"></i>
+                    Contact Messages
+                </a>
                 <a href="#settings" class="nav-item" data-section="settings">
                     <i class="fas fa-cog"></i>
                     Settings
@@ -249,6 +253,23 @@
                             <button type="submit" class="btn btn-primary">Update Social Media Links</button>
                         </div>
                     </form>
+                </div>
+            </section>
+
+            <!-- Contact Messages Section -->
+            <section id="contacts" class="content-section">
+                <div class="content-card">
+                    <h2>Contact Form Submissions</h2>
+                    <div class="contacts-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="new">New</button>
+                        <button class="filter-btn" data-filter="read">Read</button>
+                    </div>
+                    <div id="contactsList" class="contacts-list">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i> Loading contacts...
+                        </div>
+                    </div>
                 </div>
             </section>
 

@@ -89,20 +89,39 @@ class ChurchWebsite {
         this.displayVideo(mainVideo, video);
     }
 
-    displayVideo(container, video) {
+    displayVideo(container, video, autoplay = false) {
         container.innerHTML = '';
 
         if (video.type === 'youtube') {
+            // Extract video ID and create proper embed URL
+            const videoId = this.extractYouTubeVideoId(video.url);
+            if (!videoId) {
+                console.error('Invalid YouTube URL:', video.url);
+                container.innerHTML = '<div class="video-error"><p>Invalid video URL</p></div>';
+                return;
+            }
+
             const iframe = document.createElement('iframe');
-            iframe.src = video.url;
+            // Use proper YouTube embed URL with autoplay parameter
+            const embedParams = new URLSearchParams({
+                autoplay: autoplay ? '1' : '0',
+                rel: '0', // Don't show related videos from other channels
+                modestbranding: '1', // Minimal YouTube branding
+                enablejsapi: '1' // Enable JavaScript API for better control
+            });
+            iframe.src = `https://www.youtube.com/embed/${videoId}?${embedParams.toString()}`;
             iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
             iframe.allowFullscreen = true;
+            iframe.frameBorder = '0';
+            iframe.setAttribute('loading', 'lazy');
             container.appendChild(iframe);
         } else if (video.type === 'upload') {
             const videoElement = document.createElement('video');
             videoElement.src = video.url;
             videoElement.controls = true;
+            videoElement.autoplay = autoplay;
             videoElement.setAttribute('controlsList', 'nodownload');
+            videoElement.setAttribute('playsinline', ''); // For mobile devices
             container.appendChild(videoElement);
         }
     }
@@ -173,7 +192,8 @@ class ChurchWebsite {
     playVideo(video) {
         const mainVideo = document.getElementById('main-video');
         if (mainVideo) {
-            this.displayVideo(mainVideo, video);
+            // Display video with autoplay enabled when user clicks
+            this.displayVideo(mainVideo, video, true);
             // Scroll to video
             document.getElementById('home').scrollIntoView({
                 behavior: 'smooth',
@@ -310,9 +330,20 @@ class ChurchWebsite {
             submitBtn.disabled = true;
 
             try {
-                // In a real implementation, you would send this to a server endpoint
-                // For now, we'll simulate a successful submission
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Send contact form data to backend
+                const response = await fetch('/.netlify/functions/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to send message');
+                }
                 
                 // Show success message
                 document.getElementById('contact-success').style.display = 'block';
@@ -322,13 +353,13 @@ class ChurchWebsite {
                 contactForm.reset();
                 
                 // Show notification
-                showNotification('Thank you! Your message has been sent successfully.', 'success');
+                showNotification(result.message || 'Thank you! Your message has been sent successfully.', 'success');
                 
             } catch (error) {
                 console.error('Contact form error:', error);
                 document.getElementById('contact-error').style.display = 'block';
                 document.getElementById('contact-success').style.display = 'none';
-                showNotification('Sorry, there was an error sending your message.', 'error');
+                showNotification(error.message || 'Sorry, there was an error sending your message.', 'error');
             } finally {
                 // Restore button
                 submitBtn.innerHTML = originalText;

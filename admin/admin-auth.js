@@ -132,6 +132,47 @@ class AdminAuth {
         document.getElementById('loginError').style.display = 'none';
         document.getElementById('loginSuccess').style.display = 'none';
     }
+
+    // Get access token from cookies
+    getAccessToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'accessToken') {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    // Get auth headers for API requests
+    getAuthHeaders() {
+        const token = this.getAccessToken();
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
+    // Get session data from verify endpoint
+    async getSessionData() {
+        try {
+            const response = await fetch('/api/auth/verify', {
+                method: 'GET',
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const data = await response.json();
+                return data.user;
+            }
+        } catch (error) {
+            console.error('Error getting session data:', error);
+        }
+        return null;
+    }
 }
 
 // Password toggle functionality

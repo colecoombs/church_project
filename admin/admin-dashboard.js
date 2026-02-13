@@ -21,6 +21,7 @@ class AdminDashboard {
         this.loadSocialMediaForm();
         this.loadSettingsForm();
         this.loadVideoLibrary();
+        this.loadContacts();
     }
 
     setupNavigation() {
@@ -139,8 +140,8 @@ class AdminDashboard {
         }
     }
 
-    populateUserInfo() {
-        const sessionData = adminAuth.getSessionData();
+    async populateUserInfo() {
+        const sessionData = await adminAuth.getSessionData();
         if (sessionData) {
             document.getElementById('currentUser').textContent = sessionData.username;
         }
@@ -380,17 +381,29 @@ class AdminDashboard {
 
     async saveContent() {
         try {
-            // In a real implementation, this would save to a server
-            // For now, we'll simulate saving by storing in localStorage
-            localStorage.setItem('churchContent', JSON.stringify(this.contentData));
+            // Save settings to the backend
+            const response = await fetch('/.netlify/functions/settings', {
+                method: 'PUT',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include',
+                body: JSON.stringify(this.contentData.settings)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save settings');
+            }
+
+            const result = await response.json();
+            console.log('Settings saved successfully:', result);
             
-            // Also try to update the JSON file (this would need server support)
-            // For demonstration, we'll just log it
-            console.log('Content saved:', this.contentData);
+            // Also keep in localStorage as backup
+            localStorage.setItem('churchContent', JSON.stringify(this.contentData));
             
         } catch (error) {
             console.error('Error saving content:', error);
-            this.showNotification('Error saving content', 'error');
+            this.showNotification('Error saving content: ' + error.message, 'error');
+            throw error;
         }
     }
 
@@ -421,6 +434,181 @@ class AdminDashboard {
                 }
             }, 300);
         }, 3000);
+    }
+
+    // Contact Management Methods
+    async loadContacts() {
+        try {
+            const response = await fetch('/.netlify/functions/contacts', {
+                method: 'GET',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load contacts');
+            }
+
+            const result = await response.json();
+            this.contacts = result.data || [];
+            this.displayContacts(this.contacts);
+            this.setupContactFilters();
+        } catch (error) {
+            console.error('Error loading contacts:', error);
+            const contactsList = document.getElementById('contactsList');
+            if (contactsList) {
+                contactsList.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Failed to load contact submissions</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    displayContacts(contacts) {
+        const contactsList = document.getElementById('contactsList');
+        
+        if (!contacts || contacts.length === 0) {
+            contactsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No contact submissions yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        contactsList.innerHTML = contacts.map(contact => `
+            <div class="contact-item ${contact.status === 'new' ? 'unread' : ''}" data-id="${contact.id}" data-status="${contact.status}">
+                <div class="contact-header">
+                    <div class="contact-info">
+                        <strong>${this.escapeHtml(contact.name)}</strong>
+                        <span class="contact-email">${this.escapeHtml(contact.email)}</span>
+                        ${contact.phone ? `<span class="contact-phone">${this.escapeHtml(contact.phone)}</span>` : ''}
+                    </div>
+                    <div class="contact-meta">
+                        <span class="contact-date">${this.formatContactDate(contact.createdat)}</span>
+                        <span class="contact-status status-${contact.status}">${contact.status}</span>
+                    </div>
+                </div>
+                <div class="contact-subject">
+                    <strong>Subject:</strong> ${this.escapeHtml(contact.subject)}
+                </div>
+                <div class="contact-message">
+                    ${this.escapeHtml(contact.message)}
+                </div>
+                <div class="contact-actions">
+                    ${contact.status === 'new' ? 
+                        `<button class="btn btn-sm btn-secondary" onclick="adminDashboard.markAsRead(${contact.id})">
+                            <i class="fas fa-check"></i> Mark as Read
+                        </button>` : 
+                        `<button class="btn btn-sm btn-secondary" onclick="adminDashboard.markAsNew(${contact.id})">
+                            <i class="fas fa-undo"></i> Mark as New
+                        </button>`
+                    }
+                    <button class="btn btn-sm btn-danger" onclick="adminDashboard.deleteContact(${contact.id})">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    setupContactFilters() {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const filter = btn.getAttribute('data-filter');
+                this.filterContacts(filter);
+            });
+        });
+    }
+
+    filterContacts(filter) {
+        let filtered = this.contacts;
+        
+        if (filter === 'new') {
+            filtered = this.contacts.filter(c => c.status === 'new');
+        } else if (filter === 'read') {
+            filtered = this.contacts.filter(c => c.status === 'read');
+        }
+        
+        this.displayContacts(filtered);
+    }
+
+    async markAsRead(contactId) {
+        await this.updateContactStatus(contactId, 'read');
+    }
+
+    async markAsNew(contactId) {
+        await this.updateContactStatus(contactId, 'new');
+    }
+
+    async updateContactStatus(contactId, status) {
+        try {
+            const response = await fetch('/.netlify/functions/contacts', {
+                method: 'PUT',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include',
+                body: JSON.stringify({ id: contactId, status })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update contact status');
+            }
+
+            await this.loadContacts();
+            this.showNotification('Contact status updated', 'success');
+        } catch (error) {
+            console.error('Error updating contact:', error);
+            this.showNotification('Failed to update contact status', 'error');
+        }
+    }
+
+    async deleteContact(contactId) {
+        if (!confirm('Are you sure you want to delete this contact submission?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/.netlify/functions/contacts?id=${contactId}`, {
+                method: 'DELETE',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete contact');
+            }
+
+            await this.loadContacts();
+            this.showNotification('Contact deleted successfully', 'success');
+        } catch (error) {
+            console.error('Error deleting contact:', error);
+            this.showNotification('Failed to delete contact', 'error');
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    formatContactDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 }
 

@@ -107,7 +107,10 @@
     color: var(--text-light);
     cursor: pointer;
     padding: 0.5rem;
-    z-index: 2;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toggle-password:hover {
@@ -118,8 +121,9 @@
     display: flex;
     align-items: center;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     color: var(--text-color);
+    user-select: none;
 }
 
 .checkbox-container input {
@@ -127,13 +131,14 @@
 }
 
 .checkmark {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #e1e8ed;
-    border-radius: 4px;
-    margin-right: 0.75rem;
+    border-radius: 5px;
+    margin-right: 10px;
     position: relative;
     transition: var(--transition);
+    flex-shrink: 0;
 }
 
 .checkbox-container input:checked + .checkmark {
@@ -144,9 +149,9 @@
 .checkbox-container input:checked + .checkmark::after {
     content: '';
     position: absolute;
-    left: 6px;
-    top: 2px;
-    width: 6px;
+    left: 5px;
+    top: 1px;
+    width: 5px;
     height: 10px;
     border: solid white;
     border-width: 0 2px 2px 0;

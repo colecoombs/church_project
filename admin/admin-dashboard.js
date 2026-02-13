@@ -123,18 +123,35 @@ class AdminDashboard {
 
     async loadContent() {
         try {
-            const response = await fetch('/api/videos');
-            if (!response.ok) {
+            const [videosResponse, settingsResponse] = await Promise.all([
+                fetch('/.netlify/functions/videos', {
+                    headers: adminAuth.getAuthHeaders(),
+                    credentials: 'include'
+                }),
+                fetch('/.netlify/functions/settings', {
+                    headers: adminAuth.getAuthHeaders(),
+                    credentials: 'include'
+                })
+            ]);
+
+            if (!videosResponse.ok || !settingsResponse.ok) {
                 throw new Error('Failed to load content');
             }
-            this.contentData = await response.json();
+
+            const videosData = await videosResponse.json();
+            const settingsData = await settingsResponse.json();
+
+            this.contentData = {
+                currentVideo: videosData.data.find(v => v.featured) || null,
+                previousVideos: videosData.data || [],
+                settings: settingsData.data || {}
+            };
         } catch (error) {
             console.error('Error loading content:', error);
             this.showNotification('Error loading content data', 'error');
             this.contentData = {
                 currentVideo: null,
                 previousVideos: [],
-                socialMedia: {},
                 settings: {}
             };
         }
@@ -263,22 +280,54 @@ class AdminDashboard {
         const videoData = {
             type: formData.get('videoType'),
             title: formData.get('videoTitle'),
-            description: formData.get('videoDescription')
+            description: formData.get('videoDescription'),
+            featured: true
         };
 
         if (videoData.type === 'youtube') {
-            videoData.url = this.convertToEmbedUrl(formData.get('youtubeUrl'));
+            videoData.url = formData.get('youtubeUrl');
         } else if (videoData.type === 'upload') {
             const file = document.getElementById('videoFile').files[0];
             if (file) {
-                // In a real implementation, you would upload the file to a server
-                videoData.url = URL.createObjectURL(file);
+                this.showNotification('File upload not yet implemented. Please use YouTube links.', 'error');
+                return;
             }
         }
 
-        this.contentData.currentVideo = videoData;
-        await this.saveContent();
-        this.showNotification('Current video updated successfully!', 'success');
+        try {
+            // First, unfeature all existing videos
+            if (this.contentData && this.contentData.previousVideos) {
+                for (const video of this.contentData.previousVideos) {
+                    if (video.featured) {
+                        await this.updateVideoFeatured(video.id, false);
+                    }
+                }
+            }
+
+            // Add new featured video
+            const response = await fetch('/.netlify/functions/videos', {
+                method: 'POST',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include',
+                body: JSON.stringify(videoData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to save video');
+            }
+
+            await this.loadContent();
+            this.showNotification('Current video updated successfully!', 'success');
+        } catch (error) {
+            console.error('Error saving video:', error);
+            this.showNotification('Error saving video: ' + error.message, 'error');
+        }
+    }
+
+    async updateVideoFeatured(videoId, featured) {
+        // This would need a PUT endpoint, for now we'll skip
+        console.log('Would update video', videoId, 'featured status to', featured);
     }
 
     async handleAddVideoSubmit(e) {

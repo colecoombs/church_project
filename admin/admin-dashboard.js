@@ -421,12 +421,30 @@ class AdminDashboard {
     }
 
     async deleteVideo(videoId) {
-        if (confirm('Are you sure you want to delete this video?')) {
-            this.contentData.previousVideos = this.contentData.previousVideos.filter(v => v.id !== videoId);
-            await this.saveContent();
+        if (!confirm('Are you sure you want to delete this video?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/.netlify/functions/videos?id=${videoId}`, {
+                method: 'DELETE',
+                headers: adminAuth.getAuthHeaders(),
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to delete video');
+            }
+
+            // Reload content from server
+            await this.loadContent();
             this.loadVideoLibrary();
             this.updateDashboardStats();
             this.showNotification('Video deleted successfully!', 'success');
+        } catch (error) {
+            console.error('Error deleting video:', error);
+            this.showNotification('Error deleting video: ' + error.message, 'error');
         }
     }
 

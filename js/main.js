@@ -203,14 +203,17 @@ class ChurchWebsite {
     }
 
     setupSocialLinks() {
-        if (!this.content.socialMedia) return;
+        if (!this.content.settings) return;
 
         document.querySelectorAll('.social-link').forEach(link => {
             const platform = link.getAttribute('data-platform');
-            if (this.content.socialMedia[platform]) {
-                link.href = this.content.socialMedia[platform];
+            const url = this.content.settings[platform];
+            if (url) {
+                link.href = url;
                 link.target = '_blank';
                 link.rel = 'noopener noreferrer';
+            } else {
+                link.style.display = 'none';
             }
         });
     }

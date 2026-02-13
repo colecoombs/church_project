@@ -188,12 +188,13 @@ class AdminDashboard {
     }
 
     loadSocialMediaForm() {
-        if (this.contentData.socialMedia) {
-            const social = this.contentData.socialMedia;
-            document.getElementById('facebookUrl').value = social.facebook || '';
-            document.getElementById('instagramUrl').value = social.instagram || '';
-            document.getElementById('youtubeChannelUrl').value = social.youtube || '';
-            document.getElementById('twitterUrl').value = social.twitter || '';
+        if (this.contentData.settings) {
+            const settings = this.contentData.settings;
+            const facebookInput = document.getElementById('facebookUrl');
+            const youtubeInput = document.getElementById('youtubeUrl');
+            
+            if (facebookInput) facebookInput.value = settings.facebook || '';
+            if (youtubeInput) youtubeInput.value = settings.youtube || '';
         }
     }
 
@@ -371,11 +372,12 @@ class AdminDashboard {
         e.preventDefault();
         
         const formData = new FormData(e.target);
-        this.contentData.socialMedia = {
-            facebook: formData.get('facebookUrl'),
-            instagram: formData.get('instagramUrl'),
-            youtube: formData.get('youtubeChannelUrl'),
-            twitter: formData.get('twitterUrl')
+        
+        // Add social media links to settings
+        this.contentData.settings = {
+            ...this.contentData.settings,
+            facebook: formData.get('facebook'),
+            youtube: formData.get('youtube')
         };
 
         await this.saveContent();

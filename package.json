@@ -1,21 +1,35 @@
 {
-  "name": "church_project",
+  "name": "grace-community-church",
   "version": "1.0.0",
-  "description": "A simple website for a local church.",
-  "main": "index.js",
+  "description": "Modern church website with Netlify Functions and Neon PostgreSQL",
+  "main": "index.html",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "python -m http.server 8000",
+    "build": "echo 'No build needed - static site'",
+    "test": "echo 'No tests configured'",
+    "preview": "python -m http.server 8000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "church",
+    "website",
+    "video-management",
+    "authentication",
+    "express",
+    "nodejs"
+  ],
+  "author": "Grace Community Church",
+  "license": "MIT",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^2.2.0",
-    "ejs": "^3.1.10",
-    "express": "^5.1.0",
-    "express-session": "^1.18.2"
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/colecoombs/church_project.git"
   }
 }

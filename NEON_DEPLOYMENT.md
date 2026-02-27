@@ -1,151 +1,77 @@
-# Neon + Netlify Deployment Guide (Free Forever!)
+# Neon + Netlify Deployment Guide
 
-## 🐘 **Step 1: Set Up Neon Database (5 minutes)**
+This guide matches the current project implementation in this repository.
 
-### **Create Database:**
-1. Go to https://neon.tech and sign up (free with GitHub)
-2. Click "Create Project"
-3. Name: `grace-church-db`
-4. Region: Choose closest to your audience  
-5. PostgreSQL version: 15 (latest)
-6. Plan: **Free** - 3GB storage, always-on, no pausing!
+## Architecture
 
-### **Create Schema:**
-1. Go to "SQL Editor" in your Neon dashboard
-2. Copy and paste the entire contents of `database/neon-schema.sql`
-3. Click "Run" - this creates all tables and sample data
+- Static frontend served by Netlify
+- Serverless API via Netlify Functions (`netlify/functions`)
+- Neon PostgreSQL as the primary data store
 
-### **Get Connection String:**
-1. Go to "Dashboard" → your project
-2. Copy the "Connection string" (looks like):
-   ```
-   postgresql://username:password@host/database?sslmode=require
-   ```
+## 1) Create Neon Database
 
-## 🚀 **Step 2: Deploy to Netlify (5 minutes)**
+1. Create a project at https://neon.tech.
+2. Open the SQL editor and run [database/neon-schema.sql](database/neon-schema.sql).
+3. Copy your connection string (PostgreSQL URI).
 
-### **Deploy Site:**
-1. Go to https://netlify.com
-2. Click "Add new site" → "Import an existing project"  
-3. Connect to GitHub and select `church_project`
-4. Branch: `main-implementation`
-5. Build settings:
-   - **Build command**: Leave empty
-   - **Publish directory**: `.` (root)
-   - **Functions directory**: `netlify/functions`
+## 2) Configure Environment Variables
 
-### **Environment Variables:**
-In Netlify Dashboard → Site Settings → Environment Variables, add:
+Set these in Netlify Site Settings → Environment Variables:
 
 ```bash
 NODE_ENV=production
-JWT_SECRET=your-super-secure-64-character-random-string-here
-JWT_REFRESH_SECRET=another-super-secure-64-character-random-string
-DATABASE_URL=postgresql://username:password@host/database?sslmode=require
+JWT_SECRET=replace-with-strong-random-secret
+JWT_REFRESH_SECRET=replace-with-strong-random-secret
+DATABASE_URL=postgresql://...
 ```
 
-**⚠️ IMPORTANT:** Replace `DATABASE_URL` with your actual Neon connection string!
+Notes:
+- `DATABASE_URL` must be your Neon connection string.
+- Use long random values for both JWT secrets.
 
-### **Deploy:**
-1. Click "Deploy site"
-2. Wait 3-5 minutes for build to complete
-3. Your site URL: `https://[random-name].netlify.app`
+## 3) Deploy to Netlify
 
-## 🔐 **Step 3: Test & Secure**
+1. Connect this GitHub repo in Netlify.
+2. Use the existing repo config:
+   - Publish directory: `.`
+   - Functions directory: `netlify/functions`
+3. Confirm redirects/headers in [netlify.toml](netlify.toml).
+4. Trigger deploy.
 
-### **Test Login:**
-- **Username**: `admin`
-- **Password**: `churchadmin123`
+## 4) Validate After Deploy
 
-### **🚨 Change Default Password:**
-1. Go to Neon SQL Editor
-2. Generate new password hash at https://bcrypt-generator.com (cost: 12)
-3. Run this query:
-```sql
-UPDATE users 
-SET passwordHash = '$2a$12$your_new_hash_here' 
-WHERE username = 'admin';
-```
+Public site checks:
+- Homepage loads
+- Current featured video renders
+- Video library renders
+- Contact form submits successfully
 
-## 📊 **Why Neon is Perfect for Churches:**
+Admin checks:
+- Login page loads at `/admin/login.html`
+- Login succeeds
+- Can add/delete videos
+- Can update settings/social links
+- Contact submissions appear in admin inbox
 
-| Feature | Neon | PlanetScale | Supabase |
-|---------|------|-------------|----------|
-| **Cost** | ✅ Actually free | ❌ $39/month | ✅ Free (limits) |
-| **Pausing** | ✅ Never | ✅ Never | ❌ 7 days |
-| **Storage** | ✅ 3GB | ❌ Paid only | ✅ 500MB |
-| **PostgreSQL** | ✅ Yes | ❌ MySQL | ✅ Yes |
-| **Serverless** | ✅ Yes | ✅ Yes | ⚠️ Traditional |
+## 5) Default Admin Credentials
 
-## 🎯 **Your Complete Stack:**
+Seeded by [database/neon-schema.sql](database/neon-schema.sql):
+- Username: `admin`
+- Password: `churchadmin123`
 
-- **Frontend**: Netlify (free, global CDN)
-- **Backend**: Netlify Functions (serverless)
-- **Database**: Neon PostgreSQL (3GB free, never pauses)
-- **Security**: JWT authentication, bcrypt passwords
-- **Total Cost**: **$0/month**
+Change the password immediately after first login.
 
-## 🔧 **Environment Variables Needed:**
+## Current Known Behavior
+
+- YouTube-based video management is fully supported.
+- Upload-style video UI exists in admin, but server-side file storage/upload is not implemented.
+- Local `npm run dev` is useful for static preview; use `netlify dev` to test serverless endpoints locally.
+
+## Local Function Testing (Optional)
 
 ```bash
-# Netlify Environment Variables
-NODE_ENV=production
-JWT_SECRET=generate-64-character-random-string
-JWT_REFRESH_SECRET=generate-another-64-character-string  
-DATABASE_URL=your-neon-connection-string-here
+npm install
+npx netlify dev
 ```
 
-## 🧪 **Testing Checklist:**
-
-### **Frontend:**
-- [ ] Homepage loads with church info
-- [ ] Video section displays properly
-- [ ] Contact form accepts submissions
-- [ ] Mobile responsive design works
-
-### **Admin Panel:**
-- [ ] Can login with admin/churchadmin123
-- [ ] Dashboard loads correctly
-- [ ] Can add/delete videos
-- [ ] Settings updates work
-- [ ] Change admin password
-
-### **Database:**
-- [ ] Check Neon dashboard for query activity
-- [ ] Verify contact submissions are stored
-- [ ] Confirm user login tracking works
-
-## 🚀 **Go Live Checklist:**
-
-1. **Content Updates:**
-   - [ ] Update church name and details in settings
-   - [ ] Add real service videos
-   - [ ] Update contact information
-   - [ ] Change default admin password
-
-2. **Security:**
-   - [ ] Strong JWT secrets set
-   - [ ] Default password changed
-   - [ ] Test all authentication flows
-
-3. **Performance:**
-   - [ ] Test site speed
-   - [ ] Verify mobile responsiveness
-   - [ ] Check all links work
-
-## 🎉 **Your Church Website is Live!**
-
-**Features Include:**
-- ✅ Professional church website
-- ✅ Video sermon management
-- ✅ Secure admin panel
-- ✅ Contact form with database storage
-- ✅ Mobile-responsive design
-- ✅ Always-on database (no pausing!)
-- ✅ Production-ready security
-
-**Maintenance:** Virtually none! Neon and Netlify handle everything automatically.
-
-**Cost:** $0/month within generous free tier limits.
-
-Your church community now has a professional, reliable website! 🙏
+This runs the site and functions together in a local Netlify runtime.

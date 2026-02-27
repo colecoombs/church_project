@@ -18,6 +18,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/auth/logout"
+  to = "/.netlify/functions/auth-logout"
+  status = 200
+
+[[redirects]]
   from = "/api/videos/current"
   to = "/.netlify/functions/videos?path=current"
   status = 200

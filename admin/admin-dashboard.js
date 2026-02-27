@@ -191,7 +191,7 @@ class AdminDashboard {
         if (this.contentData.settings) {
             const settings = this.contentData.settings;
             const facebookInput = document.getElementById('facebookUrl');
-            const youtubeInput = document.getElementById('youtubeUrl');
+            const youtubeInput = document.getElementById('socialYoutubeUrl');
             
             if (facebookInput) facebookInput.value = settings.facebook || '';
             if (youtubeInput) youtubeInput.value = settings.youtube || '';

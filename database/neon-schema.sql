@@ -45,7 +45,6 @@ CREATE TABLE contacts (
     status VARCHAR(20) DEFAULT 'new'
 );
 
--- Insert default admin user (password: churchadmin123)
 INSERT INTO users (username, passwordHash, role) VALUES 
 ('admin', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdEZwNEy0P7nUgW', 'admin');
 

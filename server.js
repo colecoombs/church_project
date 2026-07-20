@@ -7,6 +7,11 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+if (!SESSION_SECRET) {
+  throw new Error('SESSION_SECRET is required');
+}
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -14,7 +19,7 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(session({
-  secret: 'church-secret-key-change-in-production',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 3600000 } // 1 hour
@@ -44,7 +49,6 @@ function initializeData() {
   }
 
   if (!fs.existsSync(USERS_FILE)) {
-    // Default admin user: username: admin, password: admin123
     const hashedPassword = bcrypt.hashSync('admin123', 10);
     fs.writeFileSync(USERS_FILE, JSON.stringify([{
       username: 'admin',
@@ -170,5 +174,4 @@ initializeData();
 
 app.listen(PORT, () => {
   console.log(`Church website running on http://localhost:${PORT}`);
-  console.log('Default admin credentials - username: admin, password: admin123');
 });

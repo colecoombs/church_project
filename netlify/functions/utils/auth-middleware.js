@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * Verify JWT token from Authorization header or cookies
@@ -9,6 +9,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-i
  */
 function verifyAuth(event) {
   try {
+    if (!JWT_SECRET) {
+      return {
+        authorized: false,
+        error: 'Server misconfigured'
+      };
+    }
+
     let token = null;
 
     // Check Authorization header first (Bearer token)

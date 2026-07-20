@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.handler = async (event, context) => {
   console.log('Auth verify function called');
@@ -32,6 +32,14 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    if (!JWT_SECRET) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Server misconfigured', details: 'JWT_SECRET is required' })
+      };
+    }
+
     // Get token from cookies
     const cookies = event.headers.cookie || '';
     console.log('Cookies received:', cookies);
